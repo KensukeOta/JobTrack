@@ -18,3 +18,20 @@
 ## Status
 
 🚧 In development
+
+## Development
+
+### Requirements
+
+- Node.js
+- Python 3.12
+- uv
+- Docker
+- Docker Compose
+
+### Backend + PostgreSQL
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
