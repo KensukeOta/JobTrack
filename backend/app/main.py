@@ -1,4 +1,8 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from sqlalchemy import text
+from sqlmodel import Session
+
+from .database import get_session
 
 app = FastAPI(
     title="JobTrack API",
@@ -7,5 +11,12 @@ app = FastAPI(
 
 
 @app.get("/health")
-def health_check() -> dict[str, str]:
-    return {"status": "ok"}
+def health_check(
+    session: Session = Depends(get_session),
+) -> dict[str, str]:
+    session.exec(text("SELECT 1"))
+
+    return {
+        "status": "ok",
+        "database": "ok",
+    }
