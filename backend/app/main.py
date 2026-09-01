@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlmodel import Session
@@ -12,7 +14,7 @@ app = FastAPI(
 
 @app.get("/health")
 def health_check(
-    session: Session = Depends(get_session),
+    session: Annotated[Session, Depends(get_session)],
 ) -> dict[str, str]:
     session.exec(text("SELECT 1"))
 
