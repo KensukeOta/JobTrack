@@ -6,6 +6,7 @@ from sqlmodel import Session
 
 from .database import get_session
 from .routers.auth import router as auth_router
+from .routers.users import router as users_router
 
 app = FastAPI(
     title="JobTrack API",
@@ -13,6 +14,7 @@ app = FastAPI(
 )
 
 app.include_router(auth_router)
+app.include_router(users_router)
 
 
 @app.get("/health")

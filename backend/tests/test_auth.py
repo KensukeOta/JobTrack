@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime, timedelta
 
 import jwt
 from fastapi import status
@@ -7,6 +8,7 @@ from sqlmodel import Session, select
 
 from app.config import get_settings
 from app.models.user import User
+from app.security.jwt import create_access_token
 from app.security.password import verify_password
 
 
@@ -262,3 +264,113 @@ def test_login_cookie_has_security_attributes(
     assert "httponly" in set_cookie
     assert "samesite=lax" in set_cookie
     assert "path=/" in set_cookie
+
+
+def test_get_current_user(
+    client: TestClient,
+) -> None:
+    register_response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Test User",
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    user_id = register_response.json()["id"]
+
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert login_response.status_code == status.HTTP_200_OK
+
+    response = client.get("/api/v1/users/me")
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "id": user_id,
+        "name": "Test User",
+        "email": "test@example.com",
+    }
+
+
+def test_get_current_user_without_cookie_returns_unauthorized(
+    client: TestClient,
+) -> None:
+    response = client.get("/api/v1/users/me")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {
+        "detail": "認証が必要です。",
+    }
+
+
+def test_get_current_user_with_invalid_token_returns_unauthorized(
+    client: TestClient,
+) -> None:
+    client.cookies.set(
+        "access_token",
+        "invalid-token",
+    )
+
+    response = client.get("/api/v1/users/me")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {
+        "detail": "認証が必要です。",
+    }
+
+
+def test_get_current_user_with_unknown_user_returns_unauthorized(
+    client: TestClient,
+) -> None:
+    unknown_user_id = uuid.uuid4()
+
+    token = create_access_token(
+        subject=str(unknown_user_id),
+    )
+
+    client.cookies.set(
+        "access_token",
+        token,
+    )
+
+    response = client.get("/api/v1/users/me")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {
+        "detail": "認証が必要です。",
+    }
+
+
+def test_get_current_user_with_expired_token_returns_unauthorized(
+    client: TestClient,
+) -> None:
+    settings = get_settings()
+
+    token = jwt.encode(
+        {
+            "sub": str(uuid.uuid4()),
+            "exp": datetime.now(UTC) - timedelta(minutes=1),
+        },
+        settings.jwt_secret_key,
+        algorithm=settings.jwt_algorithm,
+    )
+
+    client.cookies.set(
+        "access_token",
+        token,
+    )
+
+    response = client.get("/api/v1/users/me")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {
+        "detail": "認証が必要です。",
+    }
