@@ -1,11 +1,17 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlmodel import Session
 
+from ..config import get_settings
 from ..database import get_session
-from ..schemas.user import UserCreate, UserResponse
-from ..services.auth_service import create_user, get_user_by_email
+from ..schemas.user import LoginRequest, UserCreate, UserResponse
+from ..security.jwt import create_access_token
+from ..services.auth_service import (
+    authenticate_user,
+    create_user,
+    get_user_by_email,
+)
 
 router = APIRouter(
     prefix="/api/v1/auth",
@@ -39,3 +45,43 @@ def register(
         session,
         user_create,
     )
+
+
+@router.post(
+    "/login",
+    response_model=UserResponse,
+)
+def login(
+    login_request: LoginRequest,
+    response: Response,
+    session: SessionDep,
+) -> UserResponse:
+    user = authenticate_user(
+        session,
+        str(login_request.email),
+        login_request.password,
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="メールアドレスまたはパスワードが正しくありません。",
+        )
+
+    access_token = create_access_token(
+        subject=str(user.id),
+    )
+
+    settings = get_settings()
+
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite="lax",
+        path="/",
+        max_age=settings.access_token_expire_minutes * 60,
+    )
+
+    return user
