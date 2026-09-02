@@ -16,6 +16,14 @@ class UserCreate(SQLModel):
     )
 
 
+class LoginRequest(SQLModel):
+    email: EmailStr
+    password: str = Field(
+        min_length=8,
+        max_length=128,
+    )
+
+
 class UserResponse(SQLModel):
     id: uuid.UUID
     name: str
