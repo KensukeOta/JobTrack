@@ -6,6 +6,7 @@ from sqlmodel import Session
 from ..config import get_settings
 from ..database import get_session
 from ..schemas.user import LoginRequest, LogoutResponse, UserCreate, UserResponse
+from ..security.csrf import create_csrf_token
 from ..security.jwt import create_access_token
 from ..services.auth_service import (
     authenticate_user,
@@ -72,12 +73,26 @@ def login(
         subject=str(user.id),
     )
 
+    csrf_token = create_csrf_token(
+        user_id=str(user.id),
+    )
+
     settings = get_settings()
 
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
+        secure=settings.cookie_secure,
+        samesite="lax",
+        path="/",
+        max_age=settings.access_token_expire_minutes * 60,
+    )
+
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=False,
         secure=settings.cookie_secure,
         samesite="lax",
         path="/",
@@ -96,6 +111,11 @@ def logout(
 ) -> LogoutResponse:
     response.delete_cookie(
         key="access_token",
+        path="/",
+    )
+
+    response.delete_cookie(
+        key="csrf_token",
         path="/",
     )
 
