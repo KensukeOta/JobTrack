@@ -398,6 +398,7 @@ def test_logout(
 
     assert login_response.status_code == status.HTTP_200_OK
     assert "access_token" in client.cookies
+    assert "csrf_token" in client.cookies
 
     logout_response = client.post(
         "/api/v1/auth/logout",
@@ -409,6 +410,7 @@ def test_logout(
     }
 
     assert "access_token" not in client.cookies
+    assert "csrf_token" not in client.cookies
 
 
 def test_logout_invalidates_current_user_session(
@@ -464,3 +466,65 @@ def test_logout_without_authentication_succeeds(
     }
 
     assert "access_token" not in client.cookies
+
+
+def test_login_sets_csrf_cookie(
+    client: TestClient,
+) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Test User",
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    assert "access_token" in client.cookies
+    assert "csrf_token" in client.cookies
+
+    csrf_token = client.cookies.get("csrf_token")
+
+    assert csrf_token is not None
+    assert "." in csrf_token
+
+
+def test_login_csrf_cookie_has_security_attributes(
+    client: TestClient,
+) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Test User",
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    set_cookie_headers = response.headers.get_list("set-cookie")
+
+    csrf_cookie_header = next(
+        header for header in set_cookie_headers if header.startswith("csrf_token=")
+    ).lower()
+
+    assert "samesite=lax" in csrf_cookie_header
+    assert "path=/" in csrf_cookie_header
+    assert "httponly" not in csrf_cookie_header
