@@ -1,3 +1,14 @@
+import os
+
+os.environ.setdefault(
+    "DATABASE_URL",
+    "postgresql+psycopg://jobtrack:jobtrack@localhost:5432/jobtrack",
+)
+os.environ.setdefault(
+    "JWT_SECRET_KEY",
+    "0123456789abcdef0123456789abcdef",
+)
+
 from collections.abc import Generator
 
 import pytest

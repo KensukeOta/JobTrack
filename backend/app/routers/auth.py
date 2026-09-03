@@ -5,7 +5,7 @@ from sqlmodel import Session
 
 from ..config import get_settings
 from ..database import get_session
-from ..schemas.user import LoginRequest, UserCreate, UserResponse
+from ..schemas.user import LoginRequest, LogoutResponse, UserCreate, UserResponse
 from ..security.jwt import create_access_token
 from ..services.auth_service import (
     authenticate_user,
@@ -85,3 +85,20 @@ def login(
     )
 
     return user
+
+
+@router.post(
+    "/logout",
+    response_model=LogoutResponse,
+)
+def logout(
+    response: Response,
+) -> LogoutResponse:
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+    )
+
+    return LogoutResponse(
+        message="ログアウトしました。",
+    )

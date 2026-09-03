@@ -374,3 +374,93 @@ def test_get_current_user_with_expired_token_returns_unauthorized(
     assert response.json() == {
         "detail": "認証が必要です。",
     }
+
+
+def test_logout(
+    client: TestClient,
+) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Test User",
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert login_response.status_code == status.HTTP_200_OK
+    assert "access_token" in client.cookies
+
+    logout_response = client.post(
+        "/api/v1/auth/logout",
+    )
+
+    assert logout_response.status_code == status.HTTP_200_OK
+    assert logout_response.json() == {
+        "message": "ログアウトしました。",
+    }
+
+    assert "access_token" not in client.cookies
+
+
+def test_logout_invalidates_current_user_session(
+    client: TestClient,
+) -> None:
+    client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Test User",
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    authenticated_response = client.get(
+        "/api/v1/users/me",
+    )
+
+    assert authenticated_response.status_code == status.HTTP_200_OK
+
+    client.post(
+        "/api/v1/auth/logout",
+    )
+
+    response = client.get(
+        "/api/v1/users/me",
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {
+        "detail": "認証が必要です。",
+    }
+
+
+def test_logout_without_authentication_succeeds(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/v1/auth/logout",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "message": "ログアウトしました。",
+    }
+
+    assert "access_token" not in client.cookies

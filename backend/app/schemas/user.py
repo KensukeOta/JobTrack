@@ -24,6 +24,10 @@ class LoginRequest(SQLModel):
     )
 
 
+class LogoutResponse(SQLModel):
+    message: str
+
+
 class UserResponse(SQLModel):
     id: uuid.UUID
     name: str
