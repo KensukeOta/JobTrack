@@ -1,5 +1,6 @@
 import uuid
 from datetime import date, datetime
+from enum import StrEnum
 
 from pydantic import model_validator
 from sqlmodel import Field, SQLModel
@@ -81,3 +82,21 @@ class JobResponse(SQLModel):
 
     created_at: datetime
     updated_at: datetime
+
+
+class JobListResponse(SQLModel):
+    items: list[JobResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+class JobSort(StrEnum):
+    CREATED_AT = "created_at"
+    UPDATED_AT = "updated_at"
+    NEXT_ACTION_DATE = "next_action_date"
+
+
+class SortOrder(StrEnum):
+    ASC = "asc"
+    DESC = "desc"
