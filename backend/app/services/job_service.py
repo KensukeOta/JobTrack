@@ -1,11 +1,12 @@
 import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy import func, or_
 from sqlmodel import Session, select
 
 from ..models.job import Job, JobStatus
 from ..models.user import User
-from ..schemas.job import JobCreate, JobSort, SortOrder
+from ..schemas.job import JobCreate, JobSort, JobUpdate, SortOrder
 
 
 def create_job(
@@ -91,3 +92,36 @@ def get_job_by_id(
     )
 
     return session.exec(statement).first()
+
+
+def update_job(
+    session: Session,
+    job: Job,
+    job_update: JobUpdate,
+) -> Job:
+    update_data = job_update.model_dump(
+        exclude_unset=True,
+    )
+
+    salary_min = update_data.get(
+        "salary_min",
+        job.salary_min,
+    )
+    salary_max = update_data.get(
+        "salary_max",
+        job.salary_max,
+    )
+
+    if salary_min is not None and salary_max is not None and salary_max < salary_min:
+        raise ValueError("salary_maxはsalary_min以上である必要があります。")
+
+    for field, value in update_data.items():
+        setattr(job, field, value)
+
+    job.updated_at = datetime.now(UTC)
+
+    session.add(job)
+    session.commit()
+    session.refresh(job)
+
+    return job

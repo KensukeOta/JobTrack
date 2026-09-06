@@ -61,6 +61,61 @@ class JobCreate(SQLModel):
         return self
 
 
+class JobUpdate(SQLModel):
+    company_name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=200,
+    )
+    job_title: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=200,
+    )
+    status: JobStatus | None = None
+
+    job_url: str | None = Field(
+        default=None,
+        max_length=2048,
+    )
+    location: str | None = Field(
+        default=None,
+        max_length=200,
+    )
+    employment_type: EmploymentType | None = None
+
+    salary_min: int | None = Field(
+        default=None,
+        ge=0,
+    )
+    salary_max: int | None = Field(
+        default=None,
+        ge=0,
+    )
+
+    next_action: str | None = Field(
+        default=None,
+        max_length=300,
+    )
+    next_action_date: date | None = None
+    memo: str | None = Field(
+        default=None,
+        max_length=5000,
+    )
+
+    @model_validator(mode="after")
+    def validate_required_fields(self) -> "JobUpdate":
+        fields_set = self.model_fields_set
+
+        if "company_name" in fields_set and self.company_name is None:
+            raise ValueError("company_nameにnullは指定できません。")
+
+        if "job_title" in fields_set and self.job_title is None:
+            raise ValueError("job_titleにnullは指定できません。")
+
+        return self
+
+
 class JobResponse(SQLModel):
     id: uuid.UUID
     user_id: uuid.UUID

@@ -8,8 +8,15 @@ from ..database import get_session
 from ..dependencies.auth import CurrentUserDep
 from ..dependencies.csrf import CsrfProtectionDep
 from ..models.job import JobStatus
-from ..schemas.job import JobCreate, JobListResponse, JobResponse, JobSort, SortOrder
-from ..services.job_service import create_job, get_job_by_id, get_jobs
+from ..schemas.job import (
+    JobCreate,
+    JobListResponse,
+    JobResponse,
+    JobSort,
+    JobUpdate,
+    SortOrder,
+)
+from ..services.job_service import create_job, get_job_by_id, get_jobs, update_job
 
 router = APIRouter(
     prefix="/api/v1/jobs",
@@ -113,3 +120,39 @@ def get_job(
         )
 
     return job
+
+
+@router.patch(
+    "/{job_id}",
+    response_model=JobResponse,
+)
+def update_job_endpoint(
+    job_id: uuid.UUID,
+    job_update: JobUpdate,
+    session: SessionDep,
+    current_user: CurrentUserDep,
+    _: CsrfProtectionDep,
+) -> JobResponse:
+    job = get_job_by_id(
+        session=session,
+        current_user=current_user,
+        job_id=job_id,
+    )
+
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="求人応募が見つかりません。",
+        )
+
+    try:
+        return update_job(
+            session=session,
+            job=job,
+            job_update=job_update,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(exc),
+        ) from exc

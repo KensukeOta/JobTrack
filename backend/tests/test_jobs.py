@@ -780,3 +780,310 @@ def test_get_job_without_authentication_returns_unauthorized(
     )
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_update_job_single_field(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    job = create_test_job(
+        client,
+        auth["csrf_token"],
+    )
+
+    response = client.patch(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "status": "interview",
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert data["status"] == "interview"
+    assert data["company_name"] == job["company_name"]
+    assert data["job_title"] == job["job_title"]
+
+
+def test_update_job_multiple_fields(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    job = create_test_job(
+        client,
+        auth["csrf_token"],
+    )
+
+    response = client.patch(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "company_name": "株式会社Updated",
+            "job_title": "データエンジニア",
+            "status": "interview",
+            "memo": "更新後のメモ",
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert data["company_name"] == "株式会社Updated"
+    assert data["job_title"] == "データエンジニア"
+    assert data["status"] == "interview"
+    assert data["memo"] == "更新後のメモ"
+
+
+def test_update_job_can_clear_nullable_field(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    create_response = client.post(
+        "/api/v1/jobs",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "company_name": "株式会社Example",
+            "job_title": "Webエンジニア",
+            "memo": "削除予定のメモ",
+        },
+    )
+
+    assert create_response.status_code == status.HTTP_201_CREATED
+
+    job = create_response.json()
+
+    response = client.patch(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "memo": None,
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["memo"] is None
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"company_name": None},
+        {"job_title": None},
+    ],
+)
+def test_update_job_rejects_null_required_fields(
+    client: TestClient,
+    payload: dict[str, None],
+) -> None:
+    auth = register_and_login(client)
+    job = create_test_job(client, auth["csrf_token"])
+
+    response = client.patch(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json=payload,
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+def test_update_job_rejects_invalid_salary_range_with_existing_value(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    create_response = client.post(
+        "/api/v1/jobs",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "company_name": "株式会社Example",
+            "job_title": "Webエンジニア",
+            "salary_min": 4000000,
+            "salary_max": 6000000,
+        },
+    )
+
+    job = create_response.json()
+
+    response = client.patch(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "salary_min": 7000000,
+        },
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+def test_update_job_rejects_invalid_salary_max_with_existing_value(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    create_response = client.post(
+        "/api/v1/jobs",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "company_name": "株式会社Example",
+            "job_title": "Webエンジニア",
+            "salary_min": 4000000,
+            "salary_max": 6000000,
+        },
+    )
+
+    job = create_response.json()
+
+    response = client.patch(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "salary_max": 3000000,
+        },
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+def test_update_job_rejects_invalid_status(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+    job = create_test_job(client, auth["csrf_token"])
+
+    response = client.patch(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "status": "invalid",
+        },
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+def test_update_job_without_csrf_returns_forbidden(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+    job = create_test_job(client, auth["csrf_token"])
+
+    response = client.patch(
+        f"/api/v1/jobs/{job['id']}",
+        json={
+            "status": "interview",
+        },
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_update_nonexistent_job_returns_not_found(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    response = client.patch(
+        "/api/v1/jobs/11111111-1111-1111-1111-111111111111",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "status": "interview",
+        },
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_update_other_users_job_returns_not_found(
+    client: TestClient,
+) -> None:
+    user_a = register_and_login(
+        client,
+        email="user-a@example.com",
+    )
+
+    job_a = create_test_job(
+        client,
+        user_a["csrf_token"],
+    )
+
+    client.post("/api/v1/auth/logout")
+
+    user_b = register_and_login(
+        client,
+        email="user-b@example.com",
+    )
+
+    response = client.patch(
+        f"/api/v1/jobs/{job_a['id']}",
+        headers={
+            "X-CSRF-Token": user_b["csrf_token"],
+        },
+        json={
+            "status": "interview",
+        },
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_update_job_without_authentication_returns_unauthorized(
+    client: TestClient,
+) -> None:
+    response = client.patch(
+        "/api/v1/jobs/11111111-1111-1111-1111-111111111111",
+        json={
+            "status": "interview",
+        },
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_update_job_changes_updated_at(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+    job = create_test_job(client, auth["csrf_token"])
+
+    response = client.patch(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+        json={
+            "status": "interview",
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["updated_at"] != job["updated_at"]
