@@ -16,7 +16,13 @@ from ..schemas.job import (
     JobUpdate,
     SortOrder,
 )
-from ..services.job_service import create_job, get_job_by_id, get_jobs, update_job
+from ..services.job_service import (
+    create_job,
+    delete_job,
+    get_job_by_id,
+    get_jobs,
+    update_job,
+)
 
 router = APIRouter(
     prefix="/api/v1/jobs",
@@ -156,3 +162,31 @@ def update_job_endpoint(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail=str(exc),
         ) from exc
+
+
+@router.delete(
+    "/{job_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_job_endpoint(
+    job_id: uuid.UUID,
+    session: SessionDep,
+    current_user: CurrentUserDep,
+    _: CsrfProtectionDep,
+) -> None:
+    job = get_job_by_id(
+        session=session,
+        current_user=current_user,
+        job_id=job_id,
+    )
+
+    if job is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="求人応募が見つかりません。",
+        )
+
+    delete_job(
+        session=session,
+        job=job,
+    )

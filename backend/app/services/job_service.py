@@ -125,3 +125,11 @@ def update_job(
     session.refresh(job)
 
     return job
+
+
+def delete_job(
+    session: Session,
+    job: Job,
+) -> None:
+    session.delete(job)
+    session.commit()
