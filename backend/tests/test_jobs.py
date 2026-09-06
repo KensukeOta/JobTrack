@@ -686,3 +686,97 @@ def test_list_jobs_without_authentication_returns_unauthorized(
     response = client.get("/api/v1/jobs")
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_get_job(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    job = create_test_job(
+        client,
+        auth["csrf_token"],
+        company_name="株式会社Example",
+        job_title="データサイエンティスト",
+    )
+
+    response = client.get(
+        f"/api/v1/jobs/{job['id']}",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert data["id"] == job["id"]
+    assert data["user_id"] == auth["user"]["id"]
+    assert data["company_name"] == "株式会社Example"
+    assert data["job_title"] == "データサイエンティスト"
+
+
+def test_get_nonexistent_job_returns_not_found(
+    client: TestClient,
+) -> None:
+    register_and_login(client)
+
+    response = client.get(
+        "/api/v1/jobs/11111111-1111-1111-1111-111111111111",
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {
+        "detail": "求人応募が見つかりません。",
+    }
+
+
+def test_get_other_users_job_returns_not_found(
+    client: TestClient,
+) -> None:
+    user_a = register_and_login(
+        client,
+        email="user-a@example.com",
+    )
+
+    job_a = create_test_job(
+        client,
+        user_a["csrf_token"],
+        company_name="株式会社UserA",
+    )
+
+    client.post("/api/v1/auth/logout")
+
+    register_and_login(
+        client,
+        email="user-b@example.com",
+    )
+
+    response = client.get(
+        f"/api/v1/jobs/{job_a['id']}",
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {
+        "detail": "求人応募が見つかりません。",
+    }
+
+
+def test_get_job_with_invalid_uuid_returns_validation_error(
+    client: TestClient,
+) -> None:
+    register_and_login(client)
+
+    response = client.get(
+        "/api/v1/jobs/not-a-uuid",
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+def test_get_job_without_authentication_returns_unauthorized(
+    client: TestClient,
+) -> None:
+    response = client.get(
+        "/api/v1/jobs/11111111-1111-1111-1111-111111111111",
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
