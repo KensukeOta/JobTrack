@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import func, or_
 from sqlmodel import Session, select
 
@@ -76,3 +78,16 @@ def get_jobs(
     jobs = list(session.exec(statement).all())
 
     return jobs, total
+
+
+def get_job_by_id(
+    session: Session,
+    current_user: User,
+    job_id: uuid.UUID,
+) -> Job | None:
+    statement = select(Job).where(
+        Job.id == job_id,
+        Job.user_id == current_user.id,
+    )
+
+    return session.exec(statement).first()
