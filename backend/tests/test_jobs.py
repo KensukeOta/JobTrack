@@ -1087,3 +1087,227 @@ def test_update_job_changes_updated_at(
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["updated_at"] != job["updated_at"]
+
+
+def test_delete_job(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    job = create_test_job(
+        client,
+        auth["csrf_token"],
+    )
+
+    response = client.delete(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.content == b""
+
+    get_response = client.get(
+        f"/api/v1/jobs/{job['id']}",
+    )
+
+    assert get_response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete_job_removes_job_from_database(
+    client: TestClient,
+    session: Session,
+) -> None:
+    auth = register_and_login(client)
+
+    job = create_test_job(
+        client,
+        auth["csrf_token"],
+    )
+
+    job_id = uuid.UUID(job["id"])
+
+    response = client.delete(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    deleted_job = session.get(Job, job_id)
+
+    assert deleted_job is None
+
+
+def test_delete_already_deleted_job_returns_not_found(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    job = create_test_job(
+        client,
+        auth["csrf_token"],
+    )
+
+    first_response = client.delete(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+    )
+
+    assert first_response.status_code == status.HTTP_204_NO_CONTENT
+
+    second_response = client.delete(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+    )
+
+    assert second_response.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_delete_job_without_csrf_returns_forbidden_and_keeps_job(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    job = create_test_job(
+        client,
+        auth["csrf_token"],
+    )
+
+    response = client.delete(
+        f"/api/v1/jobs/{job['id']}",
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    get_response = client.get(
+        f"/api/v1/jobs/{job['id']}",
+    )
+
+    assert get_response.status_code == status.HTTP_200_OK
+
+
+def test_delete_job_with_invalid_csrf_returns_forbidden_and_keeps_job(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    job = create_test_job(
+        client,
+        auth["csrf_token"],
+    )
+
+    response = client.delete(
+        f"/api/v1/jobs/{job['id']}",
+        headers={
+            "X-CSRF-Token": "invalid-csrf-token",
+        },
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    get_response = client.get(
+        f"/api/v1/jobs/{job['id']}",
+    )
+
+    assert get_response.status_code == status.HTTP_200_OK
+
+
+def test_delete_other_users_job_returns_not_found_and_keeps_job(
+    client: TestClient,
+) -> None:
+    user_a = register_and_login(
+        client,
+        email="user-a@example.com",
+    )
+
+    job_a = create_test_job(
+        client,
+        user_a["csrf_token"],
+        company_name="株式会社UserA",
+    )
+
+    client.post("/api/v1/auth/logout")
+
+    user_b = register_and_login(
+        client,
+        email="user-b@example.com",
+    )
+
+    response = client.delete(
+        f"/api/v1/jobs/{job_a['id']}",
+        headers={
+            "X-CSRF-Token": user_b["csrf_token"],
+        },
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    client.post("/api/v1/auth/logout")
+
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "user-a@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert login_response.status_code == status.HTTP_200_OK
+
+    get_response = client.get(
+        f"/api/v1/jobs/{job_a['id']}",
+    )
+
+    assert get_response.status_code == status.HTTP_200_OK
+
+
+def test_delete_nonexistent_job_returns_not_found(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    response = client.delete(
+        "/api/v1/jobs/11111111-1111-1111-1111-111111111111",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {
+        "detail": "求人応募が見つかりません。",
+    }
+
+
+def test_delete_job_with_invalid_uuid_returns_validation_error(
+    client: TestClient,
+) -> None:
+    auth = register_and_login(client)
+
+    response = client.delete(
+        "/api/v1/jobs/not-a-uuid",
+        headers={
+            "X-CSRF-Token": auth["csrf_token"],
+        },
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+def test_delete_job_without_authentication_returns_unauthorized(
+    client: TestClient,
+) -> None:
+    response = client.delete(
+        "/api/v1/jobs/11111111-1111-1111-1111-111111111111",
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
