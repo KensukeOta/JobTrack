@@ -7,6 +7,7 @@ import type { FormEvent } from "react";
 
 import { ApiError } from "@/lib/api/api-error";
 import { login } from "@/lib/api/auth";
+import { useAuth } from "@/components/providers/auth-provider";
 
 type FieldErrors = {
   email?: string;
@@ -15,6 +16,8 @@ type FieldErrors = {
 
 export function LoginForm() {
   const router = useRouter();
+
+  const { refreshUser } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,6 +67,8 @@ export function LoginForm() {
         email: email.trim(),
         password,
       });
+
+      await refreshUser();
 
       router.push("/dashboard");
     } catch (error) {
