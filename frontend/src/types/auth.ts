@@ -9,6 +9,10 @@ export type LoginRequest = {
   password: string;
 };
 
+export type LogoutResponse = {
+  message: string;
+};
+
 export type User = {
   id: string;
   name: string;
