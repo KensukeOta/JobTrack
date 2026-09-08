@@ -1,0 +1,480 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import type { FormEvent } from "react";
+
+import { ApiError } from "@/lib/api/api-error";
+import { createJob } from "@/lib/api/jobs";
+import { EMPLOYMENT_TYPE_LABELS, JOB_STATUS_LABELS } from "@/lib/jobs/labels";
+import type { EmploymentType, JobCreateRequest, JobStatus } from "@/types/job";
+
+type FieldErrors = {
+  companyName?: string;
+  jobTitle?: string;
+  jobUrl?: string;
+  location?: string;
+  salaryMin?: string;
+  salaryMax?: string;
+  nextAction?: string;
+  memo?: string;
+};
+
+export function JobCreateForm() {
+  const router = useRouter();
+
+  const [companyName, setCompanyName] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [status, setStatus] = useState<JobStatus>("interested");
+  const [jobUrl, setJobUrl] = useState("");
+  const [location, setLocation] = useState("");
+  const [employmentType, setEmploymentType] = useState<EmploymentType | "">("");
+  const [salaryMin, setSalaryMin] = useState("");
+  const [salaryMax, setSalaryMax] = useState("");
+  const [nextAction, setNextAction] = useState("");
+  const [nextActionDate, setNextActionDate] = useState("");
+  const [memo, setMemo] = useState("");
+
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function validate(): boolean {
+    const errors: FieldErrors = {};
+
+    const trimmedCompanyName = companyName.trim();
+    const trimmedJobTitle = jobTitle.trim();
+    const trimmedJobUrl = jobUrl.trim();
+    const trimmedLocation = location.trim();
+    const trimmedNextAction = nextAction.trim();
+    const trimmedMemo = memo.trim();
+
+    if (!trimmedCompanyName) {
+      errors.companyName = "企業名を入力してください。";
+    } else if (trimmedCompanyName.length > 200) {
+      errors.companyName = "企業名は200文字以内で入力してください。";
+    }
+
+    if (!trimmedJobTitle) {
+      errors.jobTitle = "職種を入力してください。";
+    } else if (trimmedJobTitle.length > 200) {
+      errors.jobTitle = "職種は200文字以内で入力してください。";
+    }
+
+    if (trimmedJobUrl.length > 2048) {
+      errors.jobUrl = "求人URLは2048文字以内で入力してください。";
+    }
+
+    if (trimmedLocation.length > 200) {
+      errors.location = "勤務地は200文字以内で入力してください。";
+    }
+
+    if (trimmedNextAction.length > 300) {
+      errors.nextAction = "次のアクションは300文字以内で入力してください。";
+    }
+
+    if (trimmedMemo.length > 5000) {
+      errors.memo = "メモは5000文字以内で入力してください。";
+    }
+
+    const parsedSalaryMin = salaryMin === "" ? null : Number(salaryMin);
+
+    const parsedSalaryMax = salaryMax === "" ? null : Number(salaryMax);
+
+    if (
+      parsedSalaryMin !== null &&
+      (!Number.isInteger(parsedSalaryMin) || parsedSalaryMin < 0)
+    ) {
+      errors.salaryMin = "最低給与は0以上の整数で入力してください。";
+    }
+
+    if (
+      parsedSalaryMax !== null &&
+      (!Number.isInteger(parsedSalaryMax) || parsedSalaryMax < 0)
+    ) {
+      errors.salaryMax = "最高給与は0以上の整数で入力してください。";
+    }
+
+    if (
+      parsedSalaryMin !== null &&
+      parsedSalaryMax !== null &&
+      parsedSalaryMax < parsedSalaryMin
+    ) {
+      errors.salaryMax = "最高給与は最低給与以上で入力してください。";
+    }
+
+    setFieldErrors(errors);
+
+    return Object.keys(errors).length === 0;
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    setApiError(null);
+
+    if (!validate()) {
+      return;
+    }
+
+    const data: JobCreateRequest = {
+      company_name: companyName.trim(),
+      job_title: jobTitle.trim(),
+      status,
+      job_url: jobUrl.trim() || null,
+      location: location.trim() || null,
+      employment_type: employmentType || null,
+      salary_min: salaryMin === "" ? null : Number(salaryMin),
+      salary_max: salaryMax === "" ? null : Number(salaryMax),
+      next_action: nextAction.trim() || null,
+      next_action_date: nextActionDate || null,
+      memo: memo.trim() || null,
+    };
+
+    setIsSubmitting(true);
+
+    try {
+      await createJob(data);
+
+      router.push("/jobs");
+      router.refresh();
+    } catch (error) {
+      if (error instanceof ApiError) {
+        if (error.status === 403) {
+          setApiError(
+            "セキュリティ情報を確認できませんでした。再ログインしてお試しください。",
+          );
+        } else if (error.status === 422) {
+          setApiError("入力内容を確認してください。");
+        } else {
+          setApiError("求人の登録に失敗しました。もう一度お試しください。");
+        }
+      } else {
+        setApiError("通信エラーが発生しました。もう一度お試しください。");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="space-y-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+    >
+      {apiError && (
+        <div
+          role="alert"
+          className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+          {apiError}
+        </div>
+      )}
+
+      <section>
+        <h2 className="text-lg font-semibold text-slate-900">基本情報</h2>
+
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div>
+            <label
+              htmlFor="company-name"
+              className="block text-sm font-medium text-slate-700"
+            >
+              企業名
+              <span className="ml-1 text-red-600">*</span>
+            </label>
+
+            <input
+              id="company-name"
+              type="text"
+              value={companyName}
+              onChange={(event) => setCompanyName(event.target.value)}
+              autoComplete="organization"
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              aria-invalid={Boolean(fieldErrors.companyName)}
+            />
+
+            {fieldErrors.companyName && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.companyName}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="job-title"
+              className="block text-sm font-medium text-slate-700"
+            >
+              職種
+              <span className="ml-1 text-red-600">*</span>
+            </label>
+
+            <input
+              id="job-title"
+              type="text"
+              value={jobTitle}
+              onChange={(event) => setJobTitle(event.target.value)}
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              aria-invalid={Boolean(fieldErrors.jobTitle)}
+            />
+
+            {fieldErrors.jobTitle && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.jobTitle}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="status"
+              className="block text-sm font-medium text-slate-700"
+            >
+              ステータス
+            </label>
+
+            <select
+              id="status"
+              value={status}
+              onChange={(event) => setStatus(event.target.value as JobStatus)}
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+            >
+              {Object.entries(JOB_STATUS_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="employment-type"
+              className="block text-sm font-medium text-slate-700"
+            >
+              雇用形態
+            </label>
+
+            <select
+              id="employment-type"
+              value={employmentType}
+              onChange={(event) =>
+                setEmploymentType(event.target.value as EmploymentType | "")
+              }
+              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+            >
+              <option value="">未設定</option>
+
+              {Object.entries(EMPLOYMENT_TYPE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="location"
+              className="block text-sm font-medium text-slate-700"
+            >
+              勤務地
+            </label>
+
+            <input
+              id="location"
+              type="text"
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+              placeholder="例：大阪府大阪市"
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+            />
+
+            {fieldErrors.location && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.location}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="job-url"
+              className="block text-sm font-medium text-slate-700"
+            >
+              求人URL
+            </label>
+
+            <input
+              id="job-url"
+              type="url"
+              value={jobUrl}
+              onChange={(event) => setJobUrl(event.target.value)}
+              placeholder="https://example.com/jobs/..."
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+            />
+
+            {fieldErrors.jobUrl && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.jobUrl}</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-200 pt-8">
+        <h2 className="text-lg font-semibold text-slate-900">給与</h2>
+
+        <p className="mt-1 text-sm text-slate-500">
+          金額は整数で入力してください。
+        </p>
+
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div>
+            <label
+              htmlFor="salary-min"
+              className="block text-sm font-medium text-slate-700"
+            >
+              最低給与
+            </label>
+
+            <input
+              id="salary-min"
+              type="number"
+              min="0"
+              step="1"
+              value={salaryMin}
+              onChange={(event) => setSalaryMin(event.target.value)}
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+            />
+
+            {fieldErrors.salaryMin && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.salaryMin}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="salary-max"
+              className="block text-sm font-medium text-slate-700"
+            >
+              最高給与
+            </label>
+
+            <input
+              id="salary-max"
+              type="number"
+              min="0"
+              step="1"
+              value={salaryMax}
+              onChange={(event) => setSalaryMax(event.target.value)}
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+            />
+
+            {fieldErrors.salaryMax && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.salaryMax}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-200 pt-8">
+        <h2 className="text-lg font-semibold text-slate-900">次のアクション</h2>
+
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
+          <div>
+            <label
+              htmlFor="next-action"
+              className="block text-sm font-medium text-slate-700"
+            >
+              内容
+            </label>
+
+            <input
+              id="next-action"
+              type="text"
+              value={nextAction}
+              onChange={(event) => setNextAction(event.target.value)}
+              placeholder="例：一次面接"
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+            />
+
+            {fieldErrors.nextAction && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.nextAction}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="next-action-date"
+              className="block text-sm font-medium text-slate-700"
+            >
+              日付
+            </label>
+
+            <input
+              id="next-action-date"
+              type="date"
+              value={nextActionDate}
+              onChange={(event) => setNextActionDate(event.target.value)}
+              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-200 pt-8">
+        <label
+          htmlFor="memo"
+          className="block text-lg font-semibold text-slate-900"
+        >
+          メモ
+        </label>
+
+        <textarea
+          id="memo"
+          rows={6}
+          value={memo}
+          onChange={(event) => setMemo(event.target.value)}
+          placeholder="求人についてのメモや選考状況など"
+          className="mt-3 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+        />
+
+        <div className="mt-1 flex justify-between gap-4">
+          {fieldErrors.memo ? (
+            <p className="text-sm text-red-600">{fieldErrors.memo}</p>
+          ) : (
+            <span />
+          )}
+
+          <p className="text-xs text-slate-500">{memo.length}/5000</p>
+        </div>
+      </section>
+
+      <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
+        <Link
+          href="/jobs"
+          className="inline-flex justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        >
+          キャンセル
+        </Link>
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex justify-center cursor-pointer rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSubmitting ? "登録しています..." : "求人を登録"}
+        </button>
+      </div>
+    </form>
+  );
+}

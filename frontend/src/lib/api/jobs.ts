@@ -1,6 +1,6 @@
 import { apiRequest } from "./client";
 
-import type { JobListResponse } from "@/types/job";
+import type { Job, JobCreateRequest, JobListResponse } from "@/types/job";
 
 export function getJobs(): Promise<JobListResponse> {
   const params = new URLSearchParams({
@@ -11,4 +11,11 @@ export function getJobs(): Promise<JobListResponse> {
   });
 
   return apiRequest<JobListResponse>(`/api/v1/jobs?${params.toString()}`);
+}
+
+export function createJob(data: JobCreateRequest): Promise<Job> {
+  return apiRequest<Job>("/api/v1/jobs", {
+    method: "POST",
+    body: data,
+  });
 }
