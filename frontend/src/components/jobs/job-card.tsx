@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { EMPLOYMENT_TYPE_LABELS, JOB_STATUS_LABELS } from "@/lib/jobs/labels";
 import type { Job } from "@/types/job";
 
@@ -19,7 +21,7 @@ export function JobCard({ job }: JobCardProps) {
   const nextActionDate = formatDate(job.next_action_date);
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 hover:shadow-md">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500">
@@ -27,7 +29,12 @@ export function JobCard({ job }: JobCardProps) {
           </p>
 
           <h2 className="mt-1 text-lg font-semibold text-slate-900">
-            {job.job_title}
+            <Link
+              href={`/jobs/${job.id}`}
+              className="transition hover:text-slate-600"
+            >
+              {job.job_title}
+            </Link>
           </h2>
         </div>
 
@@ -65,6 +72,15 @@ export function JobCard({ job }: JobCardProps) {
           <dd className="mt-1 text-slate-900">{nextActionDate ?? "未設定"}</dd>
         </div>
       </dl>
+
+      <div className="mt-5 border-t border-slate-100 pt-4">
+        <Link
+          href={`/jobs/${job.id}`}
+          className="text-sm font-medium text-slate-700 transition hover:text-slate-900"
+        >
+          詳細を見る →
+        </Link>
+      </div>
     </article>
   );
 }
