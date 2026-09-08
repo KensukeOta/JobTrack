@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { AppHeader } from "@/components/layout/app-header";
+import { DeleteJobButton } from "@/components/jobs/delete-job-button";
 import { ApiError } from "@/lib/api/api-error";
 import { getJob } from "@/lib/api/jobs";
 import { EMPLOYMENT_TYPE_LABELS, JOB_STATUS_LABELS } from "@/lib/jobs/labels";
@@ -179,14 +180,10 @@ function JobDetailContent() {
                       編集
                     </Link>
 
-                    <button
-                      type="button"
-                      disabled
-                      title="削除機能は次のフェーズで実装します"
-                      className="inline-flex cursor-not-allowed rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-400 opacity-60"
-                    >
-                      削除
-                    </button>
+                    <DeleteJobButton
+                      jobId={job.id}
+                      companyName={job.company_name}
+                    />
                   </div>
                 </div>
               </div>

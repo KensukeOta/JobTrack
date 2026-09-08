@@ -35,3 +35,9 @@ export function updateJob(jobId: string, data: JobUpdateRequest): Promise<Job> {
     body: data,
   });
 }
+
+export function deleteJob(jobId: string): Promise<void> {
+  return apiRequest<void>(`/api/v1/jobs/${jobId}`, {
+    method: "DELETE",
+  });
+}
