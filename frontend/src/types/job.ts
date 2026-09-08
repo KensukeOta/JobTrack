@@ -33,6 +33,20 @@ export type Job = {
   updated_at: string;
 };
 
+export type JobCreateRequest = {
+  company_name: string;
+  job_title: string;
+  status: JobStatus;
+  job_url: string | null;
+  location: string | null;
+  employment_type: EmploymentType | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  next_action: string | null;
+  next_action_date: string | null;
+  memo: string | null;
+};
+
 export type JobListResponse = {
   items: Job[];
   total: number;
