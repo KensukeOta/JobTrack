@@ -13,6 +13,10 @@ export function getJobs(): Promise<JobListResponse> {
   return apiRequest<JobListResponse>(`/api/v1/jobs?${params.toString()}`);
 }
 
+export function getJob(jobId: string): Promise<Job> {
+  return apiRequest<Job>(`/api/v1/jobs/${jobId}`);
+}
+
 export function createJob(data: JobCreateRequest): Promise<Job> {
   return apiRequest<Job>("/api/v1/jobs", {
     method: "POST",
