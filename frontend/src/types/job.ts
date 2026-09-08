@@ -47,6 +47,8 @@ export type JobCreateRequest = {
   memo: string | null;
 };
 
+export type JobUpdateRequest = Partial<JobCreateRequest>;
+
 export type JobListResponse = {
   items: Job[];
   total: number;
