@@ -15,6 +15,10 @@ export type EmploymentType =
   | "temporary"
   | "other";
 
+export type JobSort = "created_at" | "updated_at" | "next_action_date";
+
+export type SortOrder = "asc" | "desc";
+
 export type Job = {
   id: string;
   user_id: string;
@@ -48,6 +52,15 @@ export type JobCreateRequest = {
 };
 
 export type JobUpdateRequest = Partial<JobCreateRequest>;
+
+export type JobListParams = {
+  q?: string;
+  status?: JobStatus;
+  sort?: JobSort;
+  order?: SortOrder;
+  page?: number;
+  page_size?: number;
+};
 
 export type JobListResponse = {
   items: Job[];

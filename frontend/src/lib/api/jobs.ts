@@ -3,19 +3,31 @@ import { apiRequest } from "./client";
 import type {
   Job,
   JobCreateRequest,
+  JobListParams,
   JobListResponse,
   JobUpdateRequest,
 } from "@/types/job";
 
-export function getJobs(): Promise<JobListResponse> {
-  const params = new URLSearchParams({
-    page: "1",
-    page_size: "20",
-    sort: "created_at",
-    order: "desc",
-  });
+export function getJobs(params: JobListParams = {}): Promise<JobListResponse> {
+  const searchParams = new URLSearchParams();
 
-  return apiRequest<JobListResponse>(`/api/v1/jobs?${params.toString()}`);
+  if (params.q) {
+    searchParams.set("q", params.q);
+  }
+
+  if (params.status) {
+    searchParams.set("status", params.status);
+  }
+
+  searchParams.set("sort", params.sort ?? "created_at");
+
+  searchParams.set("order", params.order ?? "desc");
+
+  searchParams.set("page", String(params.page ?? 1));
+
+  searchParams.set("page_size", String(params.page_size ?? 20));
+
+  return apiRequest<JobListResponse>(`/api/v1/jobs?${searchParams.toString()}`);
 }
 
 export function getJob(jobId: string): Promise<Job> {
