@@ -1,0 +1,81 @@
+name: Backend CI
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - "docker-compose.yml"
+      - "docker-compose.e2e.yml"
+      - ".github/workflows/backend-ci.yml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "docker-compose.yml"
+      - "docker-compose.e2e.yml"
+      - ".github/workflows/backend-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Ruff / Alembic / pytest
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:17
+
+        env:
+          POSTGRES_DB: jobtrack_ci
+          POSTGRES_USER: jobtrack_ci
+          POSTGRES_PASSWORD: jobtrack_ci
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd "pg_isready -U jobtrack_ci -d jobtrack_ci"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+psycopg://jobtrack_ci:jobtrack_ci@localhost:5432/jobtrack_ci
+      JWT_SECRET_KEY: 0123456789abcdef0123456789abcdef
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      COOKIE_SECURE: "false"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run Ruff
+        run: uv run ruff check .
+
+      - name: Run Alembic migrations
+        run: uv run alembic upgrade head
+
+      - name: Run pytest
+        run: uv run pytest
