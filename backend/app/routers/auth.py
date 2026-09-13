@@ -84,7 +84,7 @@ def login(
         value=access_token,
         httponly=True,
         secure=settings.cookie_secure,
-        samesite="lax",
+        samesite=settings.cookie_samesite,
         path="/",
         max_age=settings.access_token_expire_minutes * 60,
     )
@@ -94,7 +94,7 @@ def login(
         value=csrf_token,
         httponly=False,
         secure=settings.cookie_secure,
-        samesite="lax",
+        samesite=settings.cookie_samesite,
         path="/",
         max_age=settings.access_token_expire_minutes * 60,
     )
@@ -109,14 +109,22 @@ def login(
 def logout(
     response: Response,
 ) -> LogoutResponse:
+    settings = get_settings()
+
     response.delete_cookie(
         key="access_token",
         path="/",
+        secure=settings.cookie_secure,
+        httponly=True,
+        samesite=settings.cookie_samesite,
     )
 
     response.delete_cookie(
         key="csrf_token",
         path="/",
+        secure=settings.cookie_secure,
+        httponly=False,
+        samesite=settings.cookie_samesite,
     )
 
     return LogoutResponse(

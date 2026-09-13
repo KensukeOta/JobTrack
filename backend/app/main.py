@@ -5,11 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlmodel import Session
 
+from .config import get_settings
 from .database import get_session
 from .routers.auth import router as auth_router
 from .routers.dashboard import router as dashboard_router
 from .routers.jobs import router as jobs_router
 from .routers.users import router as users_router
+
+settings = get_settings()
 
 app = FastAPI(
     title="JobTrack API",
@@ -18,12 +21,19 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-    ],
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=[
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE",
+        "OPTIONS",
+    ],
+    allow_headers=[
+        "Content-Type",
+        "X-CSRF-Token",
+    ],
 )
 
 app.include_router(auth_router)
