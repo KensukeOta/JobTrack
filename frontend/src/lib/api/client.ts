@@ -1,11 +1,7 @@
 import { ApiError } from "./api-error";
 import { getCsrfToken } from "./csrf";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-if (!API_URL) {
-  throw new Error("NEXT_PUBLIC_API_URL is not configured.");
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "";
 
 type ApiRequestOptions = Omit<RequestInit, "body"> & {
   body?: unknown;
@@ -18,7 +14,6 @@ export async function apiRequest<T>(
   options: ApiRequestOptions = {},
 ): Promise<T> {
   const method = (options.method ?? "GET").toUpperCase();
-
   const headers = new Headers(options.headers);
 
   if (options.body !== undefined) {
@@ -48,7 +43,6 @@ export async function apiRequest<T>(
       const data = (await response.json()) as {
         detail?: unknown;
       };
-
       detail = data.detail;
     } catch {
       detail = response.statusText;
