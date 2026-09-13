@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -11,6 +12,15 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 1440
 
     cookie_secure: bool = False
+    cookie_samesite: Literal["lax", "strict", "none"] = "lax"
+
+    cors_origins: str = "http://localhost:3000"
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        return [
+            origin.strip() for origin in self.cors_origins.split(",") if origin.strip()
+        ]
 
     model_config = SettingsConfigDict(
         env_file=".env",
