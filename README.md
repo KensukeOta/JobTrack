@@ -19,6 +19,20 @@ https://job-track-kensuke.vercel.app
 
 https://jobtrack-production-e2f1.up.railway.app/health
 
+## Screenshots
+
+### Dashboard
+
+![Dashboard](docs/images/dashboard.png)
+
+### Job List
+
+![Job List](docs/images/jobs.png)
+
+### Job Detail
+
+![Job Detail](docs/images/job-detail.png)
+
 ## Features
 
 - ユーザー登録・ログイン・ログアウト
