@@ -14,8 +14,37 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JobTrack",
-  description: "求人応募管理サービス",
+  metadataBase: new URL("https://job-track-kensuke.vercel.app"),
+  title: {
+    default: "JobTrack",
+    template: "%s | JobTrack",
+  },
+  description:
+    "求人への応募状況や選考進捗、次のアクションを一元管理できるWebアプリケーションです。",
+  openGraph: {
+    type: "website",
+    locale: "ja_JP",
+    url: "/",
+    siteName: "JobTrack",
+    title: "JobTrack",
+    description:
+      "求人への応募状況や選考進捗、次のアクションを一元管理できるWebアプリケーションです。",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "JobTrack - 求人応募管理Webアプリ",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "JobTrack",
+    description:
+      "求人への応募状況や選考進捗、次のアクションを一元管理できるWebアプリケーションです。",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
