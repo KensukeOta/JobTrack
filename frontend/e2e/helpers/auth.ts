@@ -36,17 +36,6 @@ export async function registerAndLogin(
     })
     .click();
 
-  await expect(page).toHaveURL(/\/login$/);
-
-  await page.getByLabel("メールアドレス").fill(user.email);
-  await page.getByLabel("パスワード").fill(user.password);
-
-  await page
-    .getByRole("button", {
-      name: "ログイン",
-    })
-    .click();
-
   await expect(page).toHaveURL(/\/dashboard$/);
 
   return user;

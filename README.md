@@ -210,7 +210,7 @@ uv run ruff check .
 uv run pytest
 ```
 
-pytestでは105件のテストを実装しています。
+pytestでは107件のテストを実装しています。
 
 ### Frontend
 

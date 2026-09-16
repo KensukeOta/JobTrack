@@ -2,16 +2,18 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useAuth } from "@/components/providers/auth-provider";
 import { ApiError } from "@/lib/api/api-error";
 import { register } from "@/lib/api/auth";
 
 import { RegisterForm } from "./register-form";
 
-const pushMock = vi.fn();
+const replaceMock = vi.fn();
+const refreshUserMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: pushMock,
+    replace: replaceMock,
   }),
 }));
 
@@ -19,11 +21,29 @@ vi.mock("@/lib/api/auth", () => ({
   register: vi.fn(),
 }));
 
+vi.mock("@/lib/api/auth", () => ({
+  register: vi.fn(),
+}));
+
+vi.mock("@/components/providers/auth-provider", () => ({
+  useAuth: vi.fn(),
+}));
+
 const registerMock = vi.mocked(register);
+const useAuthMock = vi.mocked(useAuth);
 
 describe("RegisterForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    useAuthMock.mockReturnValue({
+      user: null,
+      isLoading: false,
+      refreshUser: refreshUserMock,
+      logout: vi.fn(),
+    });
+
+    refreshUserMock.mockResolvedValue(undefined);
   });
 
   it("名前・メールアドレス・パスワードを入力できる", async () => {
@@ -119,7 +139,7 @@ describe("RegisterForm", () => {
     expect(registerMock).not.toHaveBeenCalled();
   });
 
-  it("正常入力時にregister APIを呼び出してログイン画面へ遷移する", async () => {
+  it("正常入力時にregister APIを呼び出して認証状態を更新しダッシュボードへ遷移する", async () => {
     const user = userEvent.setup();
 
     registerMock.mockResolvedValue({
@@ -155,7 +175,9 @@ describe("RegisterForm", () => {
 
     expect(registerMock).toHaveBeenCalledTimes(1);
 
-    expect(pushMock).toHaveBeenCalledWith("/login");
+    expect(refreshUserMock).toHaveBeenCalledTimes(1);
+
+    expect(replaceMock).toHaveBeenCalledWith("/dashboard");
   });
 
   it("409の場合はメールアドレス重複エラーを表示する", async () => {
@@ -186,7 +208,8 @@ describe("RegisterForm", () => {
       "このメールアドレスは既に登録されています。",
     );
 
-    expect(pushMock).not.toHaveBeenCalled();
+    expect(refreshUserMock).not.toHaveBeenCalled();
+    expect(replaceMock).not.toHaveBeenCalled();
   });
 
   it("422の場合は入力エラーを表示する", async () => {
@@ -287,7 +310,9 @@ describe("RegisterForm", () => {
     resolveRegister?.();
 
     await waitFor(() => {
-      expect(pushMock).toHaveBeenCalledWith("/login");
+      expect(refreshUserMock).toHaveBeenCalledTimes(1);
+
+      expect(replaceMock).toHaveBeenCalledWith("/dashboard");
     });
   });
 });

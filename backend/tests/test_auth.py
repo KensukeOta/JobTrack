@@ -45,6 +45,57 @@ def test_register_user(
     )
 
 
+def test_register_sets_auth_cookies(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Test User",
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+
+    assert "access_token" in response.cookies
+    assert "csrf_token" in response.cookies
+
+    csrf_token = response.cookies.get("csrf_token")
+
+    assert csrf_token is not None
+    assert "." in csrf_token
+
+
+def test_register_authenticates_user(
+    client: TestClient,
+) -> None:
+    register_response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "name": "Test User",
+            "email": "test@example.com",
+            "password": "password123",
+        },
+    )
+
+    assert register_response.status_code == status.HTTP_201_CREATED
+
+    user_id = register_response.json()["id"]
+
+    response = client.get(
+        "/api/v1/users/me",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "id": user_id,
+        "name": "Test User",
+        "email": "test@example.com",
+    }
+
+
 def test_register_duplicate_email_returns_conflict(
     client: TestClient,
 ) -> None:

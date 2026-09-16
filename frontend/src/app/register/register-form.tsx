@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
+import { useAuth } from "@/components/providers/auth-provider";
 import { ApiError } from "@/lib/api/api-error";
 import { register } from "@/lib/api/auth";
 
@@ -15,6 +16,7 @@ type FieldErrors = {
 
 export function RegisterForm() {
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -75,7 +77,9 @@ export function RegisterForm() {
         password,
       });
 
-      router.push("/login");
+      await refreshUser();
+
+      router.replace("/dashboard");
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 409) {
