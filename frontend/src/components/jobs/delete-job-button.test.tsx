@@ -250,4 +250,62 @@ describe("DeleteJobButton", () => {
       expect(mocks.push).toHaveBeenCalledWith("/jobs");
     });
   });
+
+  it("モーダルを開くとキャンセルボタンへフォーカスする", async () => {
+    const user = userEvent.setup();
+
+    render(<DeleteJobButton jobId="job-1" companyName="テスト株式会社" />);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "削除",
+      }),
+    );
+
+    expect(
+      screen.getByRole("button", {
+        name: "キャンセル",
+      }),
+    ).toHaveFocus();
+  });
+
+  it("Escapeキーでモーダルを閉じる", async () => {
+    const user = userEvent.setup();
+
+    render(<DeleteJobButton jobId="job-1" companyName="テスト株式会社" />);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "削除",
+      }),
+    );
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("モーダルを閉じると削除ボタンへフォーカスを戻す", async () => {
+    const user = userEvent.setup();
+
+    render(<DeleteJobButton jobId="job-1" companyName="テスト株式会社" />);
+
+    const openButton = screen.getByRole("button", {
+      name: "削除",
+    });
+
+    await user.click(openButton);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "キャンセル",
+      }),
+    );
+
+    await waitFor(() => {
+      expect(openButton).toHaveFocus();
+    });
+  });
 });

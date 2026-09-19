@@ -41,6 +41,12 @@ type JobFormProps = {
   onSubmit: (data: JobCreateRequest) => Promise<void>;
 };
 
+const fieldClassName =
+  "mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-300";
+
+const selectClassName =
+  "mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-300";
+
 export function JobForm({
   initialValues,
   submitLabel,
@@ -107,7 +113,6 @@ export function JobForm({
     }
 
     const parsedSalaryMin = salaryMin === "" ? null : Number(salaryMin);
-
     const parsedSalaryMax = salaryMax === "" ? null : Number(salaryMax);
 
     if (
@@ -192,20 +197,27 @@ export function JobForm({
               className="block text-sm font-medium text-slate-700"
             >
               企業名
-              <span className="ml-1 text-red-600">*</span>
+              <span className="ml-1 text-red-600" aria-hidden="true">
+                *
+              </span>
             </label>
 
             <input
               id="company-name"
               type="text"
+              required
               value={companyName}
               onChange={(event) => setCompanyName(event.target.value)}
               autoComplete="organization"
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              aria-invalid={fieldErrors.companyName ? true : undefined}
+              aria-describedby={
+                fieldErrors.companyName ? "company-name-error" : undefined
+              }
+              className={fieldClassName}
             />
 
             {fieldErrors.companyName && (
-              <p className="mt-1 text-sm text-red-600">
+              <p id="company-name-error" className="mt-1 text-sm text-red-600">
                 {fieldErrors.companyName}
               </p>
             )}
@@ -217,19 +229,26 @@ export function JobForm({
               className="block text-sm font-medium text-slate-700"
             >
               職種
-              <span className="ml-1 text-red-600">*</span>
+              <span className="ml-1 text-red-600" aria-hidden="true">
+                *
+              </span>
             </label>
 
             <input
               id="job-title"
               type="text"
+              required
               value={jobTitle}
               onChange={(event) => setJobTitle(event.target.value)}
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              aria-invalid={fieldErrors.jobTitle ? true : undefined}
+              aria-describedby={
+                fieldErrors.jobTitle ? "job-title-error" : undefined
+              }
+              className={fieldClassName}
             />
 
             {fieldErrors.jobTitle && (
-              <p className="mt-1 text-sm text-red-600">
+              <p id="job-title-error" className="mt-1 text-sm text-red-600">
                 {fieldErrors.jobTitle}
               </p>
             )}
@@ -247,7 +266,7 @@ export function JobForm({
               id="status"
               value={status}
               onChange={(event) => setStatus(event.target.value as JobStatus)}
-              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              className={selectClassName}
             >
               {Object.entries(JOB_STATUS_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -271,7 +290,7 @@ export function JobForm({
               onChange={(event) =>
                 setEmploymentType(event.target.value as EmploymentType | "")
               }
-              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              className={selectClassName}
             >
               <option value="">未設定</option>
 
@@ -297,11 +316,15 @@ export function JobForm({
               value={location}
               onChange={(event) => setLocation(event.target.value)}
               placeholder="例：大阪府大阪市"
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              aria-invalid={fieldErrors.location ? true : undefined}
+              aria-describedby={
+                fieldErrors.location ? "location-error" : undefined
+              }
+              className={fieldClassName}
             />
 
             {fieldErrors.location && (
-              <p className="mt-1 text-sm text-red-600">
+              <p id="location-error" className="mt-1 text-sm text-red-600">
                 {fieldErrors.location}
               </p>
             )}
@@ -321,11 +344,17 @@ export function JobForm({
               value={jobUrl}
               onChange={(event) => setJobUrl(event.target.value)}
               placeholder="https://example.com/jobs/..."
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              aria-invalid={fieldErrors.jobUrl ? true : undefined}
+              aria-describedby={
+                fieldErrors.jobUrl ? "job-url-error" : undefined
+              }
+              className={fieldClassName}
             />
 
             {fieldErrors.jobUrl && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.jobUrl}</p>
+              <p id="job-url-error" className="mt-1 text-sm text-red-600">
+                {fieldErrors.jobUrl}
+              </p>
             )}
           </div>
         </div>
@@ -350,11 +379,15 @@ export function JobForm({
               step="1"
               value={salaryMin}
               onChange={(event) => setSalaryMin(event.target.value)}
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              aria-invalid={fieldErrors.salaryMin ? true : undefined}
+              aria-describedby={
+                fieldErrors.salaryMin ? "salary-min-error" : undefined
+              }
+              className={fieldClassName}
             />
 
             {fieldErrors.salaryMin && (
-              <p className="mt-1 text-sm text-red-600">
+              <p id="salary-min-error" className="mt-1 text-sm text-red-600">
                 {fieldErrors.salaryMin}
               </p>
             )}
@@ -375,11 +408,15 @@ export function JobForm({
               step="1"
               value={salaryMax}
               onChange={(event) => setSalaryMax(event.target.value)}
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              aria-invalid={fieldErrors.salaryMax ? true : undefined}
+              aria-describedby={
+                fieldErrors.salaryMax ? "salary-max-error" : undefined
+              }
+              className={fieldClassName}
             />
 
             {fieldErrors.salaryMax && (
-              <p className="mt-1 text-sm text-red-600">
+              <p id="salary-max-error" className="mt-1 text-sm text-red-600">
                 {fieldErrors.salaryMax}
               </p>
             )}
@@ -405,11 +442,15 @@ export function JobForm({
               value={nextAction}
               onChange={(event) => setNextAction(event.target.value)}
               placeholder="例：一次面接"
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              aria-invalid={fieldErrors.nextAction ? true : undefined}
+              aria-describedby={
+                fieldErrors.nextAction ? "next-action-error" : undefined
+              }
+              className={fieldClassName}
             />
 
             {fieldErrors.nextAction && (
-              <p className="mt-1 text-sm text-red-600">
+              <p id="next-action-error" className="mt-1 text-sm text-red-600">
                 {fieldErrors.nextAction}
               </p>
             )}
@@ -428,7 +469,7 @@ export function JobForm({
               type="date"
               value={nextActionDate}
               onChange={(event) => setNextActionDate(event.target.value)}
-              className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+              className={fieldClassName}
             />
           </div>
         </div>
@@ -447,24 +488,32 @@ export function JobForm({
           rows={6}
           value={memo}
           onChange={(event) => setMemo(event.target.value)}
-          className="mt-3 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-slate-500"
+          aria-invalid={fieldErrors.memo ? true : undefined}
+          aria-describedby={
+            fieldErrors.memo ? "memo-error memo-count" : "memo-count"
+          }
+          className={`${fieldClassName} mt-3 resize-y`}
         />
 
-        <div className="mt-1 flex justify-between">
+        <div className="mt-1 flex justify-between gap-4">
           {fieldErrors.memo ? (
-            <p className="text-sm text-red-600">{fieldErrors.memo}</p>
+            <p id="memo-error" className="text-sm text-red-600">
+              {fieldErrors.memo}
+            </p>
           ) : (
             <span />
           )}
 
-          <p className="text-xs text-slate-500">{memo.length}/5000</p>
+          <p id="memo-count" className="shrink-0 text-xs text-slate-500">
+            {memo.length}/5000
+          </p>
         </div>
       </section>
 
       <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
         <Link
           href={cancelHref}
-          className="inline-flex justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-flex justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
         >
           キャンセル
         </Link>
@@ -472,7 +521,7 @@ export function JobForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex cursor-pointer justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex cursor-pointer justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting ? submittingLabel : submitLabel}
         </button>

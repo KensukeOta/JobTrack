@@ -5,6 +5,9 @@ import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { useAuth } from "@/components/providers/auth-provider";
 
+const focusClasses =
+  "rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2";
+
 export function AppHeader() {
   const { user } = useAuth();
 
@@ -14,15 +17,15 @@ export function AppHeader() {
         <div className="flex items-center gap-6">
           <Link
             href="/dashboard"
-            className="text-xl font-bold tracking-tight text-slate-900"
+            className={`text-xl font-bold tracking-tight text-slate-900 ${focusClasses}`}
           >
             JobTrack
           </Link>
 
-          <nav className="hidden sm:block">
+          <nav aria-label="メインナビゲーション" className="hidden sm:block">
             <Link
               href="/jobs"
-              className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+              className={`text-sm font-medium text-slate-600 transition hover:text-slate-900 ${focusClasses}`}
             >
               求人一覧
             </Link>
