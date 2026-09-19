@@ -40,14 +40,14 @@ export default function Home() {
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/register"
-              className="inline-flex h-12 items-center justify-center rounded-lg bg-blue-600 px-6 font-semibold text-white transition hover:bg-blue-700"
+              className="inline-flex h-12 items-center justify-center rounded-lg bg-blue-600 px-6 font-semibold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
               無料で始める
             </Link>
 
             <Link
               href="/login"
-              className="inline-flex h-12 items-center justify-center rounded-lg border border-zinc-300 bg-white px-6 font-semibold text-zinc-900 transition hover:bg-zinc-50"
+              className="inline-flex h-12 items-center justify-center rounded-lg border border-zinc-300 bg-white px-6 font-semibold text-zinc-900 transition hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             >
               ログイン
             </Link>
@@ -99,7 +99,7 @@ export default function Home() {
 
           <Link
             href="/register"
-            className="mt-8 inline-flex h-12 items-center justify-center rounded-lg bg-white px-6 font-semibold text-zinc-950 transition hover:bg-zinc-200"
+            className="mt-8 inline-flex h-12 items-center justify-center rounded-lg bg-white px-6 font-semibold text-zinc-950 transition hover:bg-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
           >
             JobTrackを始める
           </Link>

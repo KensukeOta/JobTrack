@@ -60,7 +60,7 @@ export function JobListControls({
 
           <button
             type="submit"
-            className="inline-flex justify-center cursor-pointer rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700"
+            className="inline-flex justify-center cursor-pointer rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
           >
             検索
           </button>
