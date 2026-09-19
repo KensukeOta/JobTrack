@@ -149,7 +149,7 @@ function JobDetailContent() {
             <div className="mb-6">
               <Link
                 href="/jobs"
-                className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+                className="rounded-sm text-sm font-medium text-slate-600 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
               >
                 ← 求人一覧へ戻る
               </Link>
@@ -175,7 +175,7 @@ function JobDetailContent() {
                   <div className="flex gap-3">
                     <Link
                       href={`/jobs/${job.id}/edit`}
-                      className="inline-flex rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                      className="inline-flex rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
                     >
                       編集
                     </Link>
@@ -230,7 +230,7 @@ function JobDetailContent() {
                             href={job.job_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="break-all text-slate-900 underline underline-offset-2"
+                            className="break-all rounded-sm text-slate-900 underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
                           >
                             {job.job_url}
                           </a>

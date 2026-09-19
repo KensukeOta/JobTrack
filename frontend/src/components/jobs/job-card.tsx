@@ -31,7 +31,7 @@ export function JobCard({ job }: JobCardProps) {
           <h2 className="mt-1 text-lg font-semibold text-slate-900">
             <Link
               href={`/jobs/${job.id}`}
-              className="transition hover:text-slate-600"
+              className="rounded-sm transition hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
             >
               {job.job_title}
             </Link>
@@ -76,7 +76,7 @@ export function JobCard({ job }: JobCardProps) {
       <div className="mt-5 border-t border-slate-100 pt-4">
         <Link
           href={`/jobs/${job.id}`}
-          className="text-sm font-medium text-slate-700 transition hover:text-slate-900"
+          className="rounded-sm text-sm font-medium text-slate-700 transition hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2"
         >
           詳細を見る →
         </Link>
