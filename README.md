@@ -223,7 +223,7 @@ npm run typecheck
 npm test
 ```
 
-Vitestでは115件のテストを実装しています。
+Vitestでは119件のテストを実装しています。
 
 ### E2E
 
@@ -241,7 +241,7 @@ E2Eテストでは以下の環境を使用します。
 - Firefox
 - Mobile Chrome（Pixel 5）
 
-Playwrightでは21件のE2Eテストを実装しています。
+Playwrightでは24件のE2Eテストを実装しています。
 
 主な検証対象：
 
