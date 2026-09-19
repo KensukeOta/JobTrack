@@ -432,4 +432,52 @@ describe("JobForm", () => {
       ).toBeEnabled();
     });
   });
+
+  it("必須項目にrequired属性を設定する", () => {
+    render(
+      <JobForm
+        initialValues={INITIAL_VALUES}
+        submitLabel="登録する"
+        submittingLabel="登録しています..."
+        cancelHref="/jobs"
+        apiError={null}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText(/企業名/)).toBeRequired();
+    expect(screen.getByLabelText(/職種/)).toBeRequired();
+  });
+
+  it("バリデーションエラーを入力欄と関連付ける", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <JobForm
+        initialValues={INITIAL_VALUES}
+        submitLabel="登録する"
+        submittingLabel="登録しています..."
+        cancelHref="/jobs"
+        apiError={null}
+        onSubmit={vi.fn()}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText(/企業名/));
+    await user.click(
+      screen.getByRole("button", {
+        name: "登録する",
+      }),
+    );
+
+    const companyNameInput = screen.getByLabelText(/企業名/);
+    const error = screen.getByText("企業名を入力してください。");
+
+    expect(companyNameInput).toHaveAttribute("aria-invalid", "true");
+    expect(companyNameInput).toHaveAttribute(
+      "aria-describedby",
+      "company-name-error",
+    );
+    expect(error).toHaveAttribute("id", "company-name-error");
+  });
 });

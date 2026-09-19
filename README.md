@@ -223,7 +223,7 @@ npm run typecheck
 npm test
 ```
 
-Vitestでは119件のテストを実装しています。
+Vitestでは124件のテストを実装しています。
 
 ### E2E
 
